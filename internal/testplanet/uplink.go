@@ -17,6 +17,7 @@ import (
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 
+	libuplink "storj.io/storj/lib/uplink"
 	"storj.io/storj/pkg/auth/signing"
 	"storj.io/storj/pkg/cfgstruct"
 	"storj.io/storj/pkg/eestream"
@@ -313,8 +314,31 @@ func (uplink *Uplink) Delete(ctx context.Context, satellite *satellite.Peer, buc
 // GetConfig returns a default config for a given satellite.
 func (uplink *Uplink) GetConfig(satellite *satellite.Peer) uplink.Config {
 	config := getDefaultConfig()
-	config.Client.SatelliteAddr = satellite.Addr()
-	config.Client.APIKey = uplink.APIKey[satellite.ID()]
+
+	apiKey, err := libuplink.ParseAPIKey(uplink.APIKey[satellite.ID()])
+	if err != nil {
+		panic(err)
+	}
+
+	encAccess := libuplink.NewEncryptionAccess()
+	encAccess.SetDefaultKey(storj.Key{})
+
+	scopeData, err := (&libuplink.Scope{
+		SatelliteAddr:    satellite.Addr(),
+		APIKey:           apiKey,
+		EncryptionAccess: encAccess,
+	}).Serialize()
+	if err != nil {
+		panic(err)
+	}
+
+	config.Scopes = map[string]string{"default": scopeData}
+	config.Scope = "default"
+
+	// Support some legacy stuff
+	config.Legacy.Client.APIKey = apiKey.Serialize()
+	config.Legacy.Client.SatelliteAddr = satellite.Addr()
+
 	config.Client.RequestTimeout = 10 * time.Second
 	config.Client.DialTimeout = 10 * time.Second
 
@@ -346,6 +370,11 @@ func atLeastOne(value int) int {
 
 // DialMetainfo returns a metainfo and streams store for the given configuration and identity.
 func DialMetainfo(ctx context.Context, log *zap.Logger, config uplink.Config, identity *identity.FullIdentity) (db storj.Metainfo, ss streams.Store, cleanup func() error, err error) {
+	scope, err := config.GetScope()
+	if err != nil {
+		return nil, nil, cleanup, err
+	}
+
 	tlsOpts, err := tlsopts.NewOptions(identity, config.TLS)
 	if err != nil {
 		return nil, nil, cleanup, err
@@ -358,11 +387,7 @@ func DialMetainfo(ctx context.Context, log *zap.Logger, config uplink.Config, id
 		Dial:    config.Client.DialTimeout,
 	})
 
-	if config.Client.SatelliteAddr == "" {
-		return nil, nil, cleanup, errs.New("satellite address not specified")
-	}
-
-	m, err := metainfo.Dial(ctx, tc, config.Client.SatelliteAddr, config.Client.APIKey)
+	m, err := metainfo.Dial(ctx, tc, scope.SatelliteAddr, scope.APIKey.Serialize())
 	if err != nil {
 		return nil, nil, cleanup, errs.New("failed to connect to metainfo service: %v", err)
 	}
@@ -400,19 +425,12 @@ func DialMetainfo(ctx context.Context, log *zap.Logger, config uplink.Config, id
 		return nil, nil, cleanup, err
 	}
 
-	// TODO(jeff): there's some cycles with libuplink and this package in the libuplink tests
-	// and so this package can't import libuplink. that's why this function is duplicated
-	// in some spots.
-
-	encStore := encryption.NewStore()
-	encStore.SetDefaultKey(new(storj.Key))
-
-	strms, err := streams.NewStreamStore(segment, config.Client.SegmentSize.Int64(), encStore,
+	strms, err := streams.NewStreamStore(segment, config.Client.SegmentSize.Int64(), scope.EncryptionAccess.Store(),
 		int(blockSize), storj.CipherSuite(config.Enc.DataType), config.Client.MaxInlineSize.Int(),
 	)
 	if err != nil {
 		return nil, nil, cleanup, errs.New("failed to create stream store: %v", err)
 	}
 
-	return kvmetainfo.New(project, m, strms, segment, encStore), strms, m.Close, nil
+	return kvmetainfo.New(project, m, strms, segment, scope.EncryptionAccess.Store()), strms, m.Close, nil
 }

@@ -14,7 +14,6 @@ import (
 	libuplink "storj.io/storj/lib/uplink"
 	"storj.io/storj/pkg/process"
 	"storj.io/storj/pkg/storj"
-	"storj.io/storj/uplink/setup"
 )
 
 var (
@@ -43,7 +42,7 @@ func list(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	access, err := setup.LoadEncryptionAccess(ctx, cfg.Enc)
+	scope, err := cfg.GetScope()
 	if err != nil {
 		return err
 	}
@@ -58,11 +57,10 @@ func list(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("No bucket specified, use format sj://bucket/")
 		}
 
-		bucket, err := project.OpenBucket(ctx, src.Bucket(), access)
+		bucket, err := project.OpenBucket(ctx, src.Bucket(), scope.EncryptionAccess)
 		if err != nil {
 			return err
 		}
-
 		defer func() {
 			if err := bucket.Close(); err != nil {
 				fmt.Printf("error closing bucket: %+v\n", err)
@@ -70,7 +68,6 @@ func list(cmd *cobra.Command, args []string) error {
 		}()
 
 		err = listFiles(ctx, bucket, src, false)
-
 		return convertError(err, src)
 	}
 
@@ -87,7 +84,7 @@ func list(cmd *cobra.Command, args []string) error {
 			for _, bucket := range list.Items {
 				fmt.Println("BKT", formatTime(bucket.Created), bucket.Name)
 				if *recursiveFlag {
-					if err := listFilesFromBucket(ctx, project, bucket.Name, access); err != nil {
+					if err := listFilesFromBucket(ctx, project, bucket.Name, scope.EncryptionAccess); err != nil {
 						return err
 					}
 				}
@@ -116,7 +113,6 @@ func listFilesFromBucket(ctx context.Context, project *libuplink.Project, bucket
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		if err := bucket.Close(); err != nil {
 			fmt.Printf("error closing bucket: %+v\n", err)

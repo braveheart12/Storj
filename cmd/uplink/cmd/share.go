@@ -13,9 +13,10 @@ import (
 
 	"storj.io/storj/internal/fpath"
 	libuplink "storj.io/storj/lib/uplink"
+	"storj.io/storj/pkg/cfgstruct"
 	"storj.io/storj/pkg/macaroon"
 	"storj.io/storj/pkg/process"
-	"storj.io/storj/uplink/setup"
+	"storj.io/storj/uplink"
 )
 
 var shareCfg struct {
@@ -28,19 +29,29 @@ var shareCfg struct {
 	NotBefore         string   `help:"disallow access before this time"`
 	NotAfter          string   `help:"disallow access after this time"`
 	AllowedPathPrefix []string `help:"whitelist of bucket path prefixes to require"`
+
+	// Share requires information about the current scope
+	uplink.ScopeConfig
 }
 
 func init() {
-	// sadly, we have to use addCmd so that it adds the cfg struct to the flags
-	// so that we can open projects and buckets. that pulls in so many unnecessary
-	// flags which makes figuring out the share command really hard. oh well.
-	shareCmd := addCmd(&cobra.Command{
+	// We skip the use of addCmd here because we only want the configuration options listed
+	// above, and addCmd adds a whole lot more than we want.
+
+	shareCmd := &cobra.Command{
 		Use:   "share",
 		Short: "Creates a possibly restricted api key",
 		RunE:  shareMain,
-	}, RootCmd)
+	}
+	RootCmd.AddCommand(shareCmd)
 
-	process.Bind(shareCmd, &shareCfg)
+	defaultConfDir := fpath.ApplicationDir("storj", "uplink")
+	confDirParam := cfgstruct.FindConfigDirParam()
+	if confDirParam != "" {
+		defaultConfDir = confDirParam
+	}
+
+	process.Bind(shareCmd, &shareCfg, defaults, cfgstruct.ConfDir(defaultConfDir))
 }
 
 const shareISO8601 = "2006-01-02T15:04:05-0700"
@@ -67,7 +78,6 @@ func parseHumanDate(date string, now time.Time) (*time.Time, error) {
 
 // shareMain is the function executed when shareCmd is called
 func shareMain(cmd *cobra.Command, args []string) (err error) {
-	ctx := process.Ctx(cmd)
 	now := time.Now()
 
 	notBefore, err := parseHumanDate(shareCfg.NotBefore, now)
@@ -95,15 +105,11 @@ func shareMain(cmd *cobra.Command, args []string) (err error) {
 		})
 	}
 
-	key, err := libuplink.ParseAPIKey(cfg.Client.APIKey)
+	scope, err := shareCfg.GetScope()
 	if err != nil {
 		return err
 	}
-
-	access, err := setup.LoadEncryptionAccess(ctx, cfg.Enc)
-	if err != nil {
-		return err
-	}
+	key, access := scope.APIKey, scope.EncryptionAccess
 
 	if len(restrictions) > 0 {
 		key, access, err = access.Restrict(key, restrictions...)
