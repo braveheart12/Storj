@@ -23,7 +23,7 @@ type FPath struct {
 	original string // the original URL or local path
 	local    bool   // if local path
 	bucket   string // only for Storj URL
-	path     string // only for Storj URL - the path within the bucket, cleaned from duplicated slashes
+	path     string // only for Storj URL - the path within the bucket
 }
 
 // New creates new FPath from the given URL
@@ -70,7 +70,7 @@ func New(p string) (FPath, error) {
 	// set path information from url
 	fp.bucket = u.Host
 	if u.Path != "" {
-		fp.path = strings.TrimLeft(path.Clean(u.Path), "/")
+		fp.path = strings.TrimLeft(u.Path, "/")
 	}
 
 	return fp, nil

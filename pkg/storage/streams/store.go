@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -450,6 +451,13 @@ type ListItem struct {
 	IsPrefix bool
 }
 
+// When listing encrypted paths we do not want a trailing / to be included in
+// encryption.EncryptPath, as that appends an encrypted empty-string at the end
+// of the list-path.
+func prepareListPath(prefix Path) paths.Unencrypted {
+	return paths.NewUnencrypted(strings.TrimSuffix(prefix.UnencryptedPath().Raw(), "/"))
+}
+
 // List all the paths inside l/, stripping off the l/ prefix
 func (s *streamStore) List(ctx context.Context, prefix Path, startAfter, endBefore string, pathCipher storj.CipherSuite, recursive bool, limit int, metaFlags uint32) (items []ListItem, more bool, err error) {
 	defer mon.Task()(&ctx)(&err)
@@ -460,12 +468,13 @@ func (s *streamStore) List(ctx context.Context, prefix Path, startAfter, endBefo
 		metaFlags |= meta.UserDefined
 	}
 
-	prefixKey, err := encryption.DerivePathKey(prefix.Bucket(), prefix.UnencryptedPath(), s.encStore)
+	trimmed := prepareListPath(prefix)
+	prefixKey, err := encryption.DerivePathKey(prefix.Bucket(), trimmed, s.encStore)
 	if err != nil {
 		return nil, false, err
 	}
 
-	encPrefix, err := encryption.EncryptPath(prefix.Bucket(), prefix.UnencryptedPath(), pathCipher, s.encStore)
+	encPrefix, err := encryption.EncryptPath(prefix.Bucket(), trimmed, pathCipher, s.encStore)
 	if err != nil {
 		return nil, false, err
 	}
