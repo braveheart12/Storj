@@ -285,12 +285,12 @@ func TestIsVetted(t *testing.T) {
 		},
 	}, func(t *testing.T, ctx *testcontext.Context, planet *testplanet.Planet) {
 		var err error
-		peer := planet.Satellites[0]
-		peer.Audit.Service.Loop.Pause()
-		peer.Repair.Checker.Loop.Pause()
-		service := peer.Overlay.Service
+		sat := planet.Satellites[0]
+		sat.Audit.Service.Loop.Pause()
+		sat.Repair.Checker.Loop.Pause()
+		service := sat.Overlay.Service
 
-		_, err = peer.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
+		_, err = sat.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
 			NodeID:       planet.StorageNodes[0].ID(),
 			IsUp:         true,
 			AuditSuccess: true,
@@ -303,7 +303,7 @@ func TestIsVetted(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = peer.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
+		_, err = sat.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
 			NodeID:       planet.StorageNodes[1].ID(),
 			IsUp:         true,
 			AuditSuccess: true,
@@ -329,7 +329,7 @@ func TestIsVetted(t *testing.T) {
 		require.False(t, reputable)
 
 		// test dqing for bad uptime
-		_, err = peer.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
+		_, err = sat.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
 			NodeID:       planet.StorageNodes[0].ID(),
 			IsUp:         false,
 			AuditSuccess: true,
@@ -343,7 +343,7 @@ func TestIsVetted(t *testing.T) {
 		require.NoError(t, err)
 
 		// test dqing for bad audit
-		_, err = peer.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
+		_, err = sat.DB.OverlayCache().UpdateStats(ctx, &overlay.UpdateRequest{
 			NodeID:       planet.StorageNodes[1].ID(),
 			IsUp:         true,
 			AuditSuccess: false,
