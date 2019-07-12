@@ -148,7 +148,7 @@ func TestDisqualifiedNodesGetNoDownload(t *testing.T) {
 		disqualifiedNode := pointer.GetRemote().GetRemotePieces()[0].NodeId
 		disqualifyNode(t, ctx, sat, disqualifiedNode)
 
-		limits, err := sat.Orders.Service.CreateGetOrderLimits(ctx, upl.Identity.PeerIdentity(), bucketID, pointer)
+		limits, _, err := sat.Orders.Service.CreateGetOrderLimits(ctx, bucketID, pointer)
 		require.NoError(t, err)
 		assert.Len(t, limits, len(pointer.GetRemote().GetRemotePieces())-1)
 
