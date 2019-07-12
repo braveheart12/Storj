@@ -18,7 +18,6 @@ import (
 	"go.uber.org/zap"
 
 	"storj.io/storj/pkg/cfgstruct"
-	"storj.io/storj/pkg/eestream"
 	"storj.io/storj/pkg/encryption"
 	"storj.io/storj/pkg/identity"
 	"storj.io/storj/pkg/macaroon"
@@ -34,6 +33,7 @@ import (
 	"storj.io/storj/satellite"
 	"storj.io/storj/satellite/console"
 	"storj.io/storj/uplink"
+	"storj.io/storj/uplink/eestream"
 	"storj.io/storj/uplink/metainfo"
 	"storj.io/storj/uplink/piecestore"
 )

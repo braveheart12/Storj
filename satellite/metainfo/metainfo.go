@@ -19,7 +19,6 @@ import (
 
 	"storj.io/storj/pkg/accounting"
 	"storj.io/storj/pkg/auth"
-	"storj.io/storj/pkg/eestream"
 	"storj.io/storj/pkg/macaroon"
 	"storj.io/storj/pkg/overlay"
 	"storj.io/storj/pkg/pb"
@@ -28,6 +27,7 @@ import (
 	"storj.io/storj/satellite/console"
 	"storj.io/storj/satellite/orders"
 	"storj.io/storj/storage"
+	"storj.io/storj/uplink/eestream"
 )
 
 const pieceHashExpiration = 2 * time.Hour
