@@ -21,7 +21,6 @@ import (
 	"storj.io/storj/pkg/encryption"
 	"storj.io/storj/pkg/identity"
 	"storj.io/storj/pkg/macaroon"
-	"storj.io/storj/pkg/metainfo/kvmetainfo"
 	"storj.io/storj/pkg/pb"
 	"storj.io/storj/pkg/peertls/tlsopts"
 	ecclient "storj.io/storj/pkg/storage/ec"
@@ -34,6 +33,7 @@ import (
 	"storj.io/storj/uplink"
 	"storj.io/storj/uplink/eestream"
 	"storj.io/storj/uplink/metainfo"
+	"storj.io/storj/uplink/metainfo/kvmetainfo"
 	"storj.io/storj/uplink/piecestore"
 	"storj.io/storj/uplink/stream"
 )
