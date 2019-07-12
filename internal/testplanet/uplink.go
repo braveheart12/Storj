@@ -23,9 +23,6 @@ import (
 	"storj.io/storj/pkg/macaroon"
 	"storj.io/storj/pkg/pb"
 	"storj.io/storj/pkg/peertls/tlsopts"
-	ecclient "storj.io/storj/pkg/storage/ec"
-	"storj.io/storj/pkg/storage/segments"
-	"storj.io/storj/pkg/storage/streams"
 	"storj.io/storj/pkg/storj"
 	"storj.io/storj/pkg/transport"
 	"storj.io/storj/satellite"
@@ -35,6 +32,9 @@ import (
 	"storj.io/storj/uplink/metainfo"
 	"storj.io/storj/uplink/metainfo/kvmetainfo"
 	"storj.io/storj/uplink/piecestore"
+	"storj.io/storj/uplink/storage/ecclient"
+	"storj.io/storj/uplink/storage/segments"
+	"storj.io/storj/uplink/storage/streams"
 	"storj.io/storj/uplink/stream"
 )
 
