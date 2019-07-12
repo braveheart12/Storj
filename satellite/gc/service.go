@@ -74,17 +74,15 @@ func (service *Service) NewPieceTracker() PieceTracker {
 }
 
 // Send sends the piece retain requests to all storage nodes
-func (service *Service) Send(ctx context.Context, pieceTracker PieceTracker, cb func()) (err error) {
+func (service *Service) Send(ctx context.Context, pieceTracker PieceTracker) (err error) {
 	defer mon.Task()(&ctx)(&err)
 
 	service.lastSendTime = time.Now().UTC()
 
-	go func() {
-		err := service.sendRetainRequests(ctx, pieceTracker, cb)
-		if err != nil {
-			service.log.Error("error sending retain infos", zap.Error(err))
-		}
-	}()
+	err = service.sendRetainRequests(ctx, pieceTracker, func() {})
+	if err != nil {
+		service.log.Error("error sending retain infos", zap.Error(err))
+	}
 
 	return nil
 }
