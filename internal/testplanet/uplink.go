@@ -28,7 +28,6 @@ import (
 	"storj.io/storj/pkg/storage/segments"
 	"storj.io/storj/pkg/storage/streams"
 	"storj.io/storj/pkg/storj"
-	"storj.io/storj/pkg/stream"
 	"storj.io/storj/pkg/transport"
 	"storj.io/storj/satellite"
 	"storj.io/storj/satellite/console"
@@ -36,6 +35,7 @@ import (
 	"storj.io/storj/uplink/eestream"
 	"storj.io/storj/uplink/metainfo"
 	"storj.io/storj/uplink/piecestore"
+	"storj.io/storj/uplink/stream"
 )
 
 // Uplink is a general purpose
