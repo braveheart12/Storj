@@ -86,8 +86,7 @@ type User struct {
 	Email        string `json:"email"`
 	PasswordHash []byte `json:"passwordHash"`
 
-	Status    UserStatus `json:"status"`
-	PartnerID uuid.UUID  `json:"partnerId"`
+	Status UserStatus `json:"status"`
 
 	CreatedAt time.Time `json:"createdAt"`
 }

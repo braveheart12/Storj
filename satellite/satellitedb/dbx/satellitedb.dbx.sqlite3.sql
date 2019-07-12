@@ -137,7 +137,6 @@ CREATE TABLE projects (
 	name TEXT NOT NULL,
 	description TEXT NOT NULL,
 	usage_limit INTEGER NOT NULL,
-	partner_id BLOB,
 	created_at TIMESTAMP NOT NULL,
 	PRIMARY KEY ( id )
 );
@@ -186,7 +185,6 @@ CREATE TABLE users (
 	short_name TEXT,
 	password_hash BLOB NOT NULL,
 	status INTEGER NOT NULL,
-	partner_id BLOB,
 	created_at TIMESTAMP NOT NULL,
 	PRIMARY KEY ( id )
 );
@@ -203,7 +201,6 @@ CREATE TABLE api_keys (
 	head BLOB NOT NULL,
 	name TEXT NOT NULL,
 	secret BLOB NOT NULL,
-	partner_id BLOB,
 	created_at TIMESTAMP NOT NULL,
 	PRIMARY KEY ( id ),
 	UNIQUE ( head ),
@@ -213,7 +210,6 @@ CREATE TABLE bucket_metainfos (
 	id BLOB NOT NULL,
 	project_id BLOB NOT NULL REFERENCES projects( id ),
 	name BLOB NOT NULL,
-	partner_id BLOB,
 	path_cipher INTEGER NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	default_segment_size INTEGER NOT NULL,
