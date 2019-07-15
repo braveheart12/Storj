@@ -53,9 +53,31 @@ func TestList(t *testing.T) {
 						"a/b//c-file",
 						"a/b//c/",
 						"//bob",
+						"/",
 					},
 					challenges: []challenge{
-						// TODO(isaac): solve encryption problem, then test "//"
+						{
+							commands: []string{"/"},
+							expectedResults: []expectedResult{
+								{
+									path:     "/",
+									isPrefix: true,
+								},
+								{
+									path:     "",
+									isPrefix: false,
+								},
+							},
+						},
+						{
+							commands: []string{"//"},
+							expectedResults: []expectedResult{
+								{
+									path:     "bob",
+									isPrefix: false,
+								},
+							},
+						},
 						{
 							commands: []string{"a", "a/"},
 							expectedResults: []expectedResult{

@@ -485,13 +485,17 @@ func (s *streamStore) List(ctx context.Context, prefix Path, startAfter, endBefo
 	// and that isn't known at compile time.
 	needsEncryption := prefix.Bucket() != ""
 	if needsEncryption {
-		startAfter, err = encryption.EncryptPathRaw(startAfter, pathCipher, prefixKey)
-		if err != nil {
-			return nil, false, err
+		if startAfter != "" {
+			startAfter, err = encryption.EncryptPathRaw(startAfter, pathCipher, prefixKey)
+			if err != nil {
+				return nil, false, err
+			}
 		}
-		endBefore, err = encryption.EncryptPathRaw(endBefore, pathCipher, prefixKey)
-		if err != nil {
-			return nil, false, err
+		if endBefore != "" {
+			endBefore, err = encryption.EncryptPathRaw(endBefore, pathCipher, prefixKey)
+			if err != nil {
+				return nil, false, err
+			}
 		}
 	}
 

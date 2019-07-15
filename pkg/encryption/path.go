@@ -20,11 +20,6 @@ import (
 func EncryptPath(bucket string, path paths.Unencrypted, cipher storj.CipherSuite, store *Store) (
 	encPath paths.Encrypted, err error) {
 
-	// Invalid paths map to invalid paths
-	if !path.Valid() {
-		return paths.Encrypted{}, nil
-	}
-
 	if cipher == storj.EncNull {
 		return paths.NewEncrypted(path.Raw()), nil
 	}
@@ -75,7 +70,7 @@ func EncryptPathRaw(raw string, cipher storj.CipherSuite, key *storj.Key) (strin
 	}
 
 	var builder strings.Builder
-	for iter, i := paths.NewIterator(raw), 0; !iter.Done(); i++ {
+	for iter, i := paths.NewIterator(raw), 0; ; i++ {
 		component := iter.Next()
 		encComponent, err := encryptPathComponent(component, cipher, key)
 		if err != nil {
@@ -89,6 +84,9 @@ func EncryptPathRaw(raw string, cipher storj.CipherSuite, key *storj.Key) (strin
 			builder.WriteByte('/')
 		}
 		builder.WriteString(encComponent)
+		if iter.Done() {
+			break
+		}
 	}
 	return builder.String(), nil
 }
